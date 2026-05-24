@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成語填字</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&display=swap");
+
+    :root {
+      --paper: #f4e2b6;
+      --paper-deep: #e9cf91;
+      --ink: #211811;
+      --muted: #7a5730;
+      --red: #b32121;
+      --red-soft: #ead1b4;
+      --green: #227a43;
+      --wood: #e7be79;
+      --wood-edge: #b77934;
+      --shadow: rgba(67, 38, 16, 0.24);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Serif TC", "KaiTi", "DFKai-SB", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 8%, rgba(179, 33, 33, 0.11), transparent 18rem),
+        radial-gradient(circle at 86% 18%, rgba(183, 121, 52, 0.18), transparent 22rem),
+        linear-gradient(135deg, #f8edcf, var(--paper) 54%, #efd89f);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(90deg, rgba(99, 64, 28, 0.045) 1px, transparent 1px),
+        linear-gradient(rgba(99, 64, 28, 0.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mix-blend-mode: multiply;
+    }
+
+    .app {
+      width: min(1080px, calc(100% - 28px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 0 32px;
+      position: relative;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px 0 20px;
+      border-bottom: 2px solid rgba(122, 87, 48, 0.28);
+    }
+
+    h1 {
+      margin: 0;
+      color: #3a1b12;
+      font-size: clamp(2.2rem, 7vw, 5rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .status {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .seal {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border: 3px solid var(--red);
+      color: var(--red);
+      font-weight: 900;
+      line-height: 1.05;
+      background: rgba(255, 249, 229, 0.44);
+    }
+
+    .game {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      padding-top: 22px;
+    }
+
+    .scroll-panel {
+      border: 2px solid rgba(122, 87, 48, 0.42);
+      background:
+        linear-gradient(90deg, rgba(183, 121, 52, 0.11), transparent 11%, transparent 89%, rgba(183, 121, 52, 0.11)),
+        rgba(255, 249, 229, 0.76);
+      box-shadow: 0 18px 38px var(--shadow), inset 0 0 0 4px rgba(255, 255, 255, 0.18);
+    }
+
+    .prompt {
+      padding: clamp(18px, 4vw, 34px);
+      text-align: center;
+    }
+
+    .idiom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: clamp(8px, 2vw, 18px);
+      min-height: 128px;
+      margin: 8px 0 18px;
+      font-size: clamp(2.9rem, 10vw, 7.2rem);
+      font-weight: 900;
+      line-height: 1.05;
+    }
+
+    .char,
+    .blank {
+      display: grid;
+      place-items: center;
+      width: clamp(64px, 14vw, 118px);
+      aspect-ratio: 1;
+    }
+
+    .blank {
+      position: relative;
+      border: 3px solid var(--red);
+      color: var(--red);
+      background:
+        linear-gradient(45deg, transparent calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% + 1px), transparent calc(50% + 1px)),
+        linear-gradient(-45deg, transparent calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% + 1px), transparent calc(50% + 1px)),
+        linear-gradient(90deg, transparent calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% + 1px), transparent calc(50% + 1px)),
+        linear-gradient(transparent calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% - 1px), rgba(179, 33, 33, 0.28) calc(50% + 1px), transparent calc(50% + 1px)),
+        rgba(255, 248, 225, 0.72);
+      box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.18);
+      transition: background-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .blank.over {
+      background-color: #fff1c6;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px var(--shadow), inset 0 0 0 4px rgba(255, 255, 255, 0.22);
+    }
+
+    .blank.correct {
+      color: var(--red);
+      font-size: clamp(2.9rem, 10vw, 7.2rem);
+      text-shadow: 0 2px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .blank.wrong {
+      animation: redFlash 0.2s ease;
+    }
+
+    .feedback {
+      min-height: 78px;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.4vw, 1.28rem);
+      line-height: 1.7;
+    }
+
+    .feedback strong {
+      display: inline-block;
+      margin-right: 8px;
+      color: var(--green);
+      font-size: 1.35em;
+    }
+
+    .next-row {
+      display: flex;
+      justify-content: center;
+      min-height: 52px;
+      margin-top: 6px;
+    }
+
+    .tiles-wrap {
+      padding: 18px;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tile {
+      display: grid;
+      place-items: center;
+      min-height: 66px;
+      border: 2px solid var(--wood-edge);
+      background:
+        linear-gradient(115deg, rgba(255, 244, 194, 0.8), rgba(222, 165, 84, 0.64)),
+        var(--wood);
+      color: #1d140e;
+      box-shadow: 0 9px 16px rgba(67, 38, 16, 0.22), inset 0 0 0 3px rgba(255, 255, 255, 0.18);
+      font-family: inherit;
+      font-size: clamp(1.9rem, 5vw, 3.15rem);
+      font-weight: 900;
+      line-height: 1;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 13px 22px rgba(67, 38, 16, 0.28), inset 0 0 0 3px rgba(255, 255, 255, 0.18);
+    }
+
+    .tile.dragging {
+      position: fixed;
+      z-index: 20;
+      width: var(--drag-width);
+      height: var(--drag-height);
+      pointer-events: none;
+      opacity: 0.92;
+      transform: translate(-50%, -50%) scale(1.04);
+      box-shadow: 0 18px 36px rgba(67, 38, 16, 0.36);
+    }
+
+    .tile.returning {
+      transition: left 0.16s ease, top 0.16s ease, transform 0.16s ease;
+    }
+
+    .tile.used {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .tile.locked {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--red);
+      font-size: clamp(2.9rem, 10vw, 7.2rem);
+      cursor: default;
+    }
+
+    .tile.correcting {
+      animation: greenStamp 0.28s ease;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 9px 18px;
+      border: 2px solid #381a11;
+      background: var(--red);
+      color: #fff8df;
+      font-family: inherit;
+      font-size: 1.08rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 18px var(--shadow);
+    }
+
+    button:hover {
+      background: #8f1717;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .result {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 22px;
+      background: rgba(60, 37, 17, 0.36);
+      z-index: 30;
+    }
+
+    .result.show {
+      display: grid;
+    }
+
+    .result-box {
+      width: min(520px, 100%);
+      border: 3px solid var(--red);
+      background: #fff1c8;
+      box-shadow: 0 22px 58px rgba(67, 38, 16, 0.36), inset 0 0 0 6px rgba(179, 33, 33, 0.08);
+      padding: 28px;
+      text-align: center;
+    }
+
+    .result-box h2 {
+      margin: 0 0 12px;
+      color: var(--red);
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 1.05;
+    }
+
+    .result-box p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 1.18rem;
+      line-height: 1.7;
+    }
+
+    @keyframes redFlash {
+      0%,
+      100% {
+        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.18);
+      }
+      50% {
+        background-color: #f7b0a8;
+        box-shadow: 0 0 22px rgba(179, 33, 33, 0.62), inset 0 0 0 4px rgba(255, 255, 255, 0.18);
+      }
+    }
+
+    @keyframes greenStamp {
+      0% {
+        background: var(--green);
+        color: #fffbe8;
+        transform: scale(1.04);
+      }
+      100% {
+        background: transparent;
+        color: var(--red);
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        width: min(100% - 20px, 620px);
+        padding-top: 14px;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .status {
+        white-space: normal;
+      }
+
+      .tiles-wrap {
+        overflow-x: auto;
+        padding-bottom: 22px;
+      }
+
+      .tiles {
+        display: flex;
+        gap: 10px;
+        min-width: max-content;
+      }
+
+      .tile {
+        width: 74px;
+        min-height: 74px;
+        flex: 0 0 74px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>成語填字</h1>
+      <button type="button" onclick="window.location.href='../大冒險地圖/index.html'" style="background:#8f1717; white-space:nowrap;">← 回到大地圖</button>
+      <div class="status" aria-live="polite">
+        <div class="seal">字<br>帖</div>
+        <div>
+          <div>題目：<strong id="questionNumber">1</strong> / 5</div>
+          <div>答對：<strong id="score">0</strong> 題</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="game">
+      <div class="scroll-panel prompt">
+        <div class="idiom" id="idiomDisplay" aria-label="待填成語"></div>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="next-row">
+          <button type="button" id="nextButton" class="hidden">下一題</button>
+        </div>
+      </div>
+
+      <div class="scroll-panel tiles-wrap">
+        <div class="tiles" id="tileBank" aria-label="可拖曳字卡"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="result" id="resultPanel" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="result-box">
+      <h2 id="resultTitle">挑戰完成</h2>
+      <p id="resultText"></p>
+      <button type="button" id="restartButton">重新挑戰</button>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      { 成語: "一鳴驚人", 缺字: [1, 2], 答案: ["鳴", "驚"], 意思: "比喻平時默默無聞，突然有驚人表現。" },
+      { 成語: "風花雪月", 缺字: [1, 3], 答案: ["花", "月"], 意思: "原指四時景色，後比喻浮華空洞的詩文。" },
+      { 成語: "三番五次", 缺字: [1, 3], 答案: ["番", "次"], 意思: "形容次數很多。" },
+      { 成語: "一字千金", 缺字: [1, 3], 答案: ["字", "金"], 意思: "形容文字價值極高。" },
+      { 成語: "畫龍點睛", 缺字: [1, 3], 答案: ["龍", "睛"], 意思: "比喻在關鍵處點明要旨。" },
+      { 成語: "守株待兔", 缺字: [1, 3], 答案: ["株", "兔"], 意思: "比喻拘泥舊法，不知變通或妄想不勞而獲。" },
+      { 成語: "刻舟求劍", 缺字: [1, 3], 答案: ["舟", "劍"], 意思: "比喻不懂情勢已變，仍用舊方法處理問題。" },
+      { 成語: "亡羊補牢", 缺字: [1, 3], 答案: ["羊", "牢"], 意思: "比喻出了差錯後及時補救，還不算太晚。" },
+      { 成語: "狐假虎威", 缺字: [1, 3], 答案: ["假", "威"], 意思: "比喻倚仗別人的權勢來欺壓人。" },
+      { 成語: "胸有成竹", 缺字: [1, 3], 答案: ["有", "竹"], 意思: "比喻做事前已有完整的計畫或把握。" },
+      { 成語: "杯弓蛇影", 缺字: [1, 3], 答案: ["弓", "影"], 意思: "比喻疑神疑鬼，因錯覺而自相驚擾。" },
+      { 成語: "掩耳盜鈴", 缺字: [1, 3], 答案: ["耳", "鈴"], 意思: "比喻自己欺騙自己，以為別人不知道。" }
+    ];
+
+    const DISTRACTORS = "山水日月風雲天地人心書墨石海江河春秋花草鳥魚龍虎馬牛金木火土竹梅蘭菊明暗真假高低遠近東西南北";
+    const ROUND_SIZE = 5;
+    const TILE_COUNT = 15;
+
+    const idiomDisplay = document.querySelector("#idiomDisplay");
+    const tileBank = document.querySelector("#tileBank");
+    const feedback = document.querySelector("#feedback");
+    const nextButton = document.querySelector("#nextButton");
+    const restartButton = document.querySelector("#restartButton");
+    const questionNumber = document.querySelector("#questionNumber");
+    const scoreEl = document.querySelector("#score");
+    const resultPanel = document.querySelector("#resultPanel");
+    const resultText = document.querySelector("#resultText");
+
+    let roundQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let mistakes = 0;
+    let filledCount = 0;
+    let dragState = null;
+    let audioContext = null;
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildTiles(question) {
+      const answers = question.答案.map((char, index) => ({
+        char,
+        answerIndex: index,
+        id: `answer-${currentIndex}-${index}`
+      }));
+
+      const used = new Set(question.答案);
+      const distractors = [...DISTRACTORS]
+        .filter((char) => !used.has(char))
+        .slice(0, TILE_COUNT * 2);
+      const pickedDistractors = shuffle(distractors).slice(0, TILE_COUNT - answers.length)
+        .map((char, index) => ({
+          char,
+          answerIndex: "",
+          id: `distractor-${currentIndex}-${index}-${char}`
+        }));
+
+      return shuffle([...answers, ...pickedDistractors]);
+    }
+
+    function playBell() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        return;
+      }
+
+      audioContext = audioContext || new AudioContext();
+      const now = audioContext.currentTime;
+      const gain = audioContext.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+      gain.connect(audioContext.destination);
+
+      [880, 1320].forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.03);
+        oscillator.connect(gain);
+        oscillator.start(now + index * 0.03);
+        oscillator.stop(now + 0.48);
+      });
+    }
+
+    function renderQuestion() {
+      const question = roundQuestions[currentIndex];
+      filledCount = 0;
+      feedback.innerHTML = "";
+      nextButton.classList.add("hidden");
+      idiomDisplay.innerHTML = "";
+      tileBank.innerHTML = "";
+      questionNumber.textContent = currentIndex + 1;
+      scoreEl.textContent = score;
+
+      [...question.成語].forEach((char, index) => {
+        const missingIndex = question.缺字.indexOf(index);
+        const node = document.createElement("div");
+
+        if (missingIndex >= 0) {
+          node.className = "blank";
+          node.dataset.answerIndex = String(missingIndex);
+          node.dataset.answer = question.答案[missingIndex];
+          node.textContent = "□";
+        } else {
+          node.className = "char";
+          node.textContent = char;
+        }
+
+        idiomDisplay.appendChild(node);
+      });
+
+      buildTiles(question).forEach((tile) => {
+        const node = document.createElement("div");
+        node.className = "tile";
+        node.textContent = tile.char;
+        node.dataset.char = tile.char;
+        node.dataset.answerIndex = String(tile.answerIndex);
+        node.dataset.id = tile.id;
+        node.addEventListener("pointerdown", startDrag);
+        tileBank.appendChild(node);
+      });
+    }
+
+    function startDrag(event) {
+      const tile = event.currentTarget;
+      if (tile.classList.contains("used")) {
+        return;
+      }
+
+      event.preventDefault();
+      tile.setPointerCapture(event.pointerId);
+
+      const rect = tile.getBoundingClientRect();
+      dragState = {
+        tile,
+        pointerId: event.pointerId,
+        originParent: tile.parentElement,
+        originNext: tile.nextSibling,
+        originRect: rect
+      };
+
+      tile.style.setProperty("--drag-width", `${rect.width}px`);
+      tile.style.setProperty("--drag-height", `${rect.height}px`);
+      tile.style.left = `${event.clientX}px`;
+      tile.style.top = `${event.clientY}px`;
+      tile.classList.add("dragging");
+
+      document.addEventListener("pointermove", moveDrag);
+      document.addEventListener("pointerup", endDrag);
+      document.addEventListener("pointercancel", cancelDrag);
+    }
+
+    function moveDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+
+      const { tile } = dragState;
+      tile.style.left = `${event.clientX}px`;
+      tile.style.top = `${event.clientY}px`;
+
+      document.querySelectorAll(".blank").forEach((blank) => blank.classList.remove("over"));
+      const target = getBlankUnderPointer(event.clientX, event.clientY);
+      if (target && !target.classList.contains("correct")) {
+        target.classList.add("over");
+      }
+    }
+
+    function endDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+
+      const target = getBlankUnderPointer(event.clientX, event.clientY);
+      document.querySelectorAll(".blank").forEach((blank) => blank.classList.remove("over"));
+
+      if (target && !target.classList.contains("correct")) {
+        judgeDrop(dragState.tile, target);
+      } else {
+        returnTile();
+      }
+
+      clearDragListeners();
+    }
+
+    function cancelDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+      document.querySelectorAll(".blank").forEach((blank) => blank.classList.remove("over"));
+      returnTile();
+      clearDragListeners();
+    }
+
+    function getBlankUnderPointer(x, y) {
+      const tile = dragState ? dragState.tile : null;
+      if (tile) {
+        tile.style.visibility = "hidden";
+      }
+      const element = document.elementFromPoint(x, y);
+      if (tile) {
+        tile.style.visibility = "";
+      }
+      return element ? element.closest(".blank") : null;
+    }
+
+    function judgeDrop(tile, blank) {
+      const isCorrect =
+        tile.dataset.char === blank.dataset.answer &&
+        tile.dataset.answerIndex === blank.dataset.answerIndex;
+
+      if (isCorrect) {
+        lockTile(tile, blank);
+        playBell();
+        filledCount += 1;
+        if (filledCount === roundQuestions[currentIndex].答案.length) {
+          completeQuestion();
+        }
+      } else {
+        mistakes += 1;
+        blank.classList.remove("wrong");
+        void blank.offsetWidth;
+        blank.classList.add("wrong");
+        window.setTimeout(() => blank.classList.remove("wrong"), 200);
+        returnTile();
+      }
+    }
+
+    function lockTile(tile, blank) {
+      tile.classList.remove("dragging");
+      tile.classList.add("locked", "correcting");
+      tile.style.left = "";
+      tile.style.top = "";
+      tile.style.removeProperty("--drag-width");
+      tile.style.removeProperty("--drag-height");
+      blank.textContent = "";
+      blank.classList.add("correct");
+      blank.appendChild(tile);
+
+      if (dragState.originParent) {
+        const placeholder = document.createElement("div");
+        placeholder.className = "tile used";
+        placeholder.textContent = tile.dataset.char;
+        dragState.originParent.insertBefore(placeholder, dragState.originNext);
+      }
+
+      window.setTimeout(() => {
+        tile.classList.remove("correcting");
+      }, 280);
+    }
+
+    function returnTile() {
+      if (!dragState) {
+        return;
+      }
+
+      const { tile, originRect } = dragState;
+      tile.classList.add("returning");
+      tile.style.left = `${originRect.left + originRect.width / 2}px`;
+      tile.style.top = `${originRect.top + originRect.height / 2}px`;
+
+      window.setTimeout(() => {
+        tile.classList.remove("dragging", "returning");
+        tile.style.left = "";
+        tile.style.top = "";
+        tile.style.removeProperty("--drag-width");
+        tile.style.removeProperty("--drag-height");
+      }, 160);
+    }
+
+    function clearDragListeners() {
+      document.removeEventListener("pointermove", moveDrag);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", cancelDrag);
+      dragState = null;
+    }
+
+    function completeQuestion() {
+      const question = roundQuestions[currentIndex];
+      score += 1;
+      scoreEl.textContent = score;
+      feedback.innerHTML = `<strong>✓ 答對！</strong>${question.意思}`;
+      nextButton.textContent = currentIndex === ROUND_SIZE - 1 ? "看總成績" : "下一題";
+      nextButton.classList.remove("hidden");
+    }
+
+    function nextQuestion() {
+      currentIndex += 1;
+      if (currentIndex >= ROUND_SIZE) {
+        showResult();
+        return;
+      }
+      renderQuestion();
+    }
+
+    function showResult() {
+      localStorage.setItem("cert_idiom", "成語之印");
+      resultText.innerHTML = `本次共完成 <strong>${ROUND_SIZE}</strong> 題，答對 <strong>${score}</strong> 題，錯誤拖放 <strong>${mistakes}</strong> 次。`;
+      resultPanel.classList.add("show");
+    }
+
+    function startGame() {
+      roundQuestions = shuffle(QUESTIONS).slice(0, ROUND_SIZE);
+      currentIndex = 0;
+      score = 0;
+      mistakes = 0;
+      resultPanel.classList.remove("show");
+      renderQuestion();
+    }
+
+    nextButton.addEventListener("click", nextQuestion);
+    restartButton.addEventListener("click", startGame);
+    startGame();
+  </script>
+</body>
+</html>

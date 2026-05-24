@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大冒險地圖</title>
+  <style>
+    :root {
+      --text: #fff7df;
+      --muted: #d8c69c;
+      --gold: #f2c14e;
+      --green: #22c55e;
+      --green-deep: #14532d;
+      --red: #ef4444;
+      --panel: #1f2937;
+      --panel-deep: #111827;
+      --shadow: rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+      color: var(--text);
+      background: #120d08;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 9px 13px;
+      color: var(--text);
+      background: #334155;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px var(--shadow);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .cover-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      background: #050302;
+      cursor: pointer;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+
+    .cover-screen.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .cover-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .map-page {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 100vw;
+      height: 100vh;
+      padding: 10px;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(242, 193, 78, 0.14), transparent 22rem),
+        radial-gradient(circle at 82% 20%, rgba(124, 58, 237, 0.14), transparent 20rem),
+        #0e0a07;
+    }
+
+    .map-shell {
+      position: relative;
+      width: min(calc(100vw - 20px), calc((100vh - 20px) * 1.777895855));
+      max-width: 100%;
+      filter: drop-shadow(0 22px 46px rgba(0, 0, 0, 0.55));
+    }
+
+    .map-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: calc(100vh - 20px);
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .top-info {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .owned-pill {
+      min-height: 42px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(242, 193, 78, 0.74);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff1be;
+      background: rgba(62, 36, 16, 0.82);
+      font-weight: 900;
+      box-shadow: 0 10px 22px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .clear-button {
+      background: rgba(127, 29, 29, 0.9);
+    }
+
+    .hotspot {
+      position: absolute;
+      border-radius: 18px;
+      cursor: pointer;
+      outline: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .hotspot:hover,
+    .hotspot:focus-visible {
+      background: rgba(255, 244, 196, 0.12);
+      box-shadow: 0 0 22px 8px rgba(255, 224, 138, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .hot-dynasty {
+      left: 8.7%;
+      top: 36.7%;
+      width: 19.1%;
+      height: 10.8%;
+    }
+
+    .hot-idiom {
+      left: 69.4%;
+      top: 36.9%;
+      width: 18.4%;
+      height: 10.5%;
+    }
+
+    .hot-warrior {
+      left: 9.1%;
+      top: 83.1%;
+      width: 18.2%;
+      height: 9.6%;
+    }
+
+    .hot-gate {
+      left: 41.2%;
+      top: 60.9%;
+      width: 19.5%;
+      height: 9.2%;
+    }
+
+    .stamp {
+      position: absolute;
+      right: 3%;
+      top: -23%;
+      display: grid;
+      place-items: center;
+      width: clamp(28px, 3.3vw, 54px);
+      aspect-ratio: 1;
+      border: 3px solid #bbf7d0;
+      border-radius: 50%;
+      color: #f0fdf4;
+      background: rgba(20, 83, 45, 0.9);
+      font-size: clamp(1.2rem, 2.3vw, 2rem);
+      font-weight: 1000;
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.7), inset 0 0 0 3px rgba(255, 255, 255, 0.09);
+      pointer-events: none;
+    }
+
+    .hot-warrior .stamp {
+      top: -26%;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      place-items: center;
+      padding: 22px;
+      background: rgba(7, 5, 4, 0.78);
+    }
+
+    .modal.show {
+      display: grid;
+    }
+
+    .door {
+      width: min(860px, 100%);
+      max-height: min(760px, calc(100vh - 44px));
+      overflow-y: auto;
+      border: 2px solid rgba(242, 193, 78, 0.65);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(45, 31, 18, 0.98), rgba(18, 24, 38, 0.98)),
+        var(--panel);
+      box-shadow: 0 28px 70px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .door-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px;
+      border-bottom: 1px solid rgba(242, 193, 78, 0.24);
+    }
+
+    .door-head h2 {
+      margin: 0;
+      color: #fff4c4;
+      font-size: clamp(1.6rem, 5vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .close {
+      width: 44px;
+      padding: 0;
+      background: #475569;
+    }
+
+    .door-body {
+      padding: 18px;
+    }
+
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .slot {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 166px;
+      border: 2px dashed rgba(216, 198, 156, 0.56);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.72);
+      transition: border-color 0.14s ease, background-color 0.14s ease, transform 0.14s ease;
+    }
+
+    .slot.over {
+      border-color: var(--gold);
+      background: rgba(242, 193, 78, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .slot.filled {
+      border-style: solid;
+      border-color: var(--green);
+      background: rgba(20, 83, 45, 0.72);
+    }
+
+    .slot.wrong {
+      animation: wrongFlash 0.24s ease;
+    }
+
+    .slot-label {
+      color: var(--gold);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .slot-drop {
+      display: grid;
+      place-items: center;
+      min-height: 94px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .bag-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .bag {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: 112px;
+      border: 2px solid rgba(216, 198, 156, 0.24);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.62);
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      min-height: 80px;
+      color: var(--muted);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .badge {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      width: min(100%, 220px);
+      min-height: 76px;
+      border: 2px solid rgba(242, 193, 78, 0.78);
+      border-radius: 8px;
+      padding: 10px;
+      color: #fff7d1;
+      background: linear-gradient(135deg, #78350f, #92400e);
+      box-shadow: 0 10px 20px var(--shadow);
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .badge:active {
+      cursor: grabbing;
+    }
+
+    .badge-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .badge-name {
+      font-weight: 1000;
+      line-height: 1.25;
+    }
+
+    .badge.locked {
+      width: 100%;
+      height: 100%;
+      border-color: #86efac;
+      background: linear-gradient(135deg, #166534, #15803d);
+      cursor: default;
+    }
+
+    .badge.dragging {
+      opacity: 0.35;
+    }
+
+    .badge.float {
+      position: fixed;
+      z-index: 60;
+      width: var(--drag-width);
+      pointer-events: none;
+      opacity: 0.95;
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    .victory {
+      display: none;
+      padding: 34px 18px;
+      text-align: center;
+    }
+
+    .victory.show {
+      display: block;
+    }
+
+    .victory h2 {
+      margin: 0 0 14px;
+      color: #fff4c4;
+      font-size: clamp(2.1rem, 7vw, 4.4rem);
+      line-height: 1.1;
+    }
+
+    .victory p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .again {
+      background: #16a34a;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes wrongFlash {
+      50% {
+        border-color: var(--red);
+        background: rgba(239, 68, 68, 0.24);
+        transform: translateX(7px);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+      }
+
+      .map-page {
+        min-height: 100vh;
+        height: auto;
+        padding-top: 74px;
+      }
+
+      .top-info {
+        left: 10px;
+        right: 10px;
+      }
+
+      .map-shell {
+        width: min(calc(100vw - 20px), calc((100vh - 90px) * 1.777895855));
+      }
+
+      .slots {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="cover-screen" id="coverScreen" aria-label="遊戲開場封面">
+    <img src="cover.png" alt="三靈啟封錄，點擊任何部位遊戲開始">
+  </section>
+
+  <main class="map-page" aria-label="大冒險地圖">
+    <div class="top-info">
+      <div class="owned-pill">持有 <strong id="certCount">0</strong> / 3</div>
+      <button type="button" class="clear-button" id="clearButton">🔄 清除進度</button>
+    </div>
+
+    <div class="map-shell">
+      <img class="map-image" src="map-bg.png" alt="大冒險地圖">
+      <div class="hotspot hot-dynasty" data-stage="dynasty" role="button" tabindex="0" aria-label="前往朝代配對"></div>
+      <div class="hotspot hot-idiom" data-stage="idiom" role="button" tabindex="0" aria-label="前往成語填字"></div>
+      <div class="hotspot hot-warrior" data-stage="warrior" role="button" tabindex="0" aria-label="前往打怪 RPG"></div>
+      <div class="hotspot hot-gate" data-stage="gate" role="button" tabindex="0" aria-label="打開中央大門"></div>
+    </div>
+  </main>
+
+  <section class="modal" id="gateModal" aria-modal="true" role="dialog" aria-labelledby="doorTitle">
+    <div class="door">
+      <div id="doorGame">
+        <div class="door-head">
+          <h2 id="doorTitle">通關大門</h2>
+          <button type="button" class="close" id="closeGateButton">×</button>
+        </div>
+        <div class="door-body">
+          <div class="slots" id="slots"></div>
+          <p class="bag-title">背包欄</p>
+          <div class="bag" id="bag"></div>
+        </div>
+      </div>
+
+      <div class="victory" id="victory">
+        <h2>🏆 冒險完成！</h2>
+        <p>總冒險時長：<strong id="durationText">00 分 00 秒</strong></p>
+        <button type="button" class="again" id="againButton">再次冒險</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const STAGES = [
+      {
+        key: "cert_dynasty",
+        type: "dynasty",
+        slot: "朝代",
+        certName: "朝代之印",
+        icon: "🎴",
+        url: "../示範1_朝代配對/index.html"
+      },
+      {
+        key: "cert_idiom",
+        type: "idiom",
+        slot: "成語",
+        certName: "成語之印",
+        icon: "📝",
+        url: "../示範2_成語填字/index.html"
+      },
+      {
+        key: "cert_warrior",
+        type: "warrior",
+        slot: "勇者",
+        certName: "勇者之印",
+        icon: "⚔️",
+        url: "../示範3_打怪RPG/index.html"
+      }
+    ];
+
+    const COVER_KEY = "adventure_cover_seen";
+    const ADVENTURE_KEYS = ["adventure_start", ...STAGES.map((stage) => stage.key)];
+    const coverScreen = document.querySelector("#coverScreen");
+    const certCount = document.querySelector("#certCount");
+    const clearButton = document.querySelector("#clearButton");
+    const gateModal = document.querySelector("#gateModal");
+    const closeGateButton = document.querySelector("#closeGateButton");
+    const slots = document.querySelector("#slots");
+    const bag = document.querySelector("#bag");
+    const doorGame = document.querySelector("#doorGame");
+    const victory = document.querySelector("#victory");
+    const durationText = document.querySelector("#durationText");
+    const againButton = document.querySelector("#againButton");
+
+    let placed = new Set();
+    let draggedBadge = null;
+    let pointerDrag = null;
+
+    function ensureAdventureStart() {
+      if (!localStorage.getItem("adventure_start")) {
+        localStorage.setItem("adventure_start", String(Date.now()));
+      }
+    }
+
+    function hasCert(stage) {
+      return localStorage.getItem(stage.key) === "1" || Boolean(localStorage.getItem(stage.key));
+    }
+
+    function updateMapStatus() {
+      const owned = STAGES.filter(hasCert).length;
+      certCount.textContent = owned;
+
+      STAGES.forEach((stage) => {
+        const hotspot = document.querySelector(`[data-stage="${stage.type}"]`);
+        if (!hotspot) {
+          return;
+        }
+        hotspot.querySelector(".stamp")?.remove();
+        if (hasCert(stage)) {
+          const stamp = document.createElement("div");
+          stamp.className = "stamp";
+          stamp.textContent = "✓";
+          hotspot.appendChild(stamp);
+        }
+      });
+    }
+
+    function showCoverIfNeeded() {
+      if (sessionStorage.getItem(COVER_KEY)) {
+        coverScreen.classList.add("hide");
+      }
+    }
+
+    function enterMap() {
+      sessionStorage.setItem(COVER_KEY, "1");
+      coverScreen.classList.add("hide");
+    }
+
+    function clearProgress() {
+      ADVENTURE_KEYS.forEach((key) => localStorage.removeItem(key));
+      ensureAdventureStart();
+      updateMapStatus();
+      closeGate();
+    }
+
+    function resetAdventure() {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    }
+
+    function activateHotspot(type) {
+      if (type === "gate") {
+        openGate();
+        return;
+      }
+
+      const stage = STAGES.find((item) => item.type === type);
+      if (stage) {
+        window.location.href = stage.url;
+      }
+    }
+
+    function openGate() {
+      placed = new Set();
+      doorGame.classList.remove("hidden");
+      victory.classList.remove("show");
+      gateModal.classList.add("show");
+      renderDoor();
+    }
+
+    function closeGate() {
+      gateModal.classList.remove("show");
+      cleanupPointerDrag();
+    }
+
+    function renderDoor() {
+      slots.innerHTML = "";
+      bag.innerHTML = "";
+
+      STAGES.forEach((stage) => {
+        const slot = document.createElement("div");
+        slot.className = "slot";
+        slot.dataset.type = stage.type;
+        slot.innerHTML = `
+          <div class="slot-label">${stage.slot}</div>
+          <div class="slot-drop">等待憑證</div>
+        `;
+        slot.addEventListener("dragover", handleDragOver);
+        slot.addEventListener("dragleave", () => slot.classList.remove("over"));
+        slot.addEventListener("drop", handleDrop);
+        slots.appendChild(slot);
+      });
+
+      const ownedStages = STAGES.filter(hasCert);
+      if (ownedStages.length === 0) {
+        bag.innerHTML = `<div class="empty">目前還沒有憑證</div>`;
+        return;
+      }
+
+      ownedStages.forEach((stage) => {
+        bag.appendChild(createBadge(stage));
+      });
+    }
+
+    function createBadge(stage) {
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      badge.draggable = true;
+      badge.dataset.type = stage.type;
+      badge.innerHTML = `
+        <span class="badge-icon" aria-hidden="true">${stage.icon}</span>
+        <span class="badge-name">${stage.certName}</span>
+      `;
+      badge.addEventListener("dragstart", (event) => {
+        if (badge.classList.contains("locked")) {
+          event.preventDefault();
+          return;
+        }
+        draggedBadge = badge;
+        badge.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", stage.type);
+      });
+      badge.addEventListener("dragend", () => {
+        badge.classList.remove("dragging");
+        draggedBadge = null;
+      });
+      badge.addEventListener("pointerdown", startPointerDrag);
+      return badge;
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add("over");
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      const slot = event.currentTarget;
+      slot.classList.remove("over");
+      const type = event.dataTransfer.getData("text/plain");
+      const badge = draggedBadge || bag.querySelector(`[data-type="${type}"]`);
+      tryPlaceBadge(badge, slot);
+    }
+
+    function startPointerDrag(event) {
+      if (event.pointerType === "mouse") {
+        return;
+      }
+
+      const badge = event.currentTarget;
+      if (badge.classList.contains("locked")) {
+        return;
+      }
+
+      event.preventDefault();
+      const rect = badge.getBoundingClientRect();
+      const floatBadge = badge.cloneNode(true);
+      floatBadge.classList.add("float");
+      floatBadge.style.setProperty("--drag-width", `${rect.width}px`);
+      document.body.appendChild(floatBadge);
+
+      pointerDrag = {
+        source: badge,
+        floatBadge,
+        pointerId: event.pointerId
+      };
+      badge.classList.add("dragging");
+      movePointerDrag(event);
+
+      document.addEventListener("pointermove", movePointerDrag);
+      document.addEventListener("pointerup", endPointerDrag);
+      document.addEventListener("pointercancel", cancelPointerDrag);
+    }
+
+    function movePointerDrag(event) {
+      if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) {
+        return;
+      }
+
+      pointerDrag.floatBadge.style.left = `${event.clientX}px`;
+      pointerDrag.floatBadge.style.top = `${event.clientY}px`;
+      document.querySelectorAll(".slot").forEach((slot) => slot.classList.remove("over"));
+
+      const slot = getSlotUnderPointer(event.clientX, event.clientY);
+      if (slot) {
+        slot.classList.add("over");
+      }
+    }
+
+    function endPointerDrag(event) {
+      if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) {
+        return;
+      }
+
+      const slot = getSlotUnderPointer(event.clientX, event.clientY);
+      document.querySelectorAll(".slot").forEach((item) => item.classList.remove("over"));
+      if (slot) {
+        tryPlaceBadge(pointerDrag.source, slot);
+      }
+      cleanupPointerDrag();
+    }
+
+    function cancelPointerDrag(event) {
+      if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) {
+        return;
+      }
+      cleanupPointerDrag();
+    }
+
+    function getSlotUnderPointer(x, y) {
+      if (!pointerDrag) {
+        return null;
+      }
+      pointerDrag.floatBadge.style.visibility = "hidden";
+      const element = document.elementFromPoint(x, y);
+      pointerDrag.floatBadge.style.visibility = "";
+      return element ? element.closest(".slot") : null;
+    }
+
+    function cleanupPointerDrag() {
+      if (pointerDrag) {
+        pointerDrag.source.classList.remove("dragging");
+        pointerDrag.floatBadge.remove();
+      }
+      document.removeEventListener("pointermove", movePointerDrag);
+      document.removeEventListener("pointerup", endPointerDrag);
+      document.removeEventListener("pointercancel", cancelPointerDrag);
+      pointerDrag = null;
+    }
+
+    function tryPlaceBadge(badge, slot) {
+      if (!badge || slot.classList.contains("filled")) {
+        return;
+      }
+
+      if (badge.dataset.type !== slot.dataset.type) {
+        slot.classList.remove("wrong");
+        void slot.offsetWidth;
+        slot.classList.add("wrong");
+        window.setTimeout(() => slot.classList.remove("wrong"), 240);
+        return;
+      }
+
+      const drop = slot.querySelector(".slot-drop");
+      badge.classList.remove("dragging");
+      badge.classList.add("locked");
+      badge.draggable = false;
+      drop.innerHTML = "";
+      drop.appendChild(badge);
+      slot.classList.add("filled");
+      placed.add(slot.dataset.type);
+
+      if (placed.size === STAGES.length) {
+        window.setTimeout(showVictory, 350);
+      }
+    }
+
+    function showVictory() {
+      doorGame.classList.add("hidden");
+      victory.classList.add("show");
+      durationText.textContent = formatDuration(Date.now() - Number(localStorage.getItem("adventure_start") || Date.now()));
+    }
+
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return `${minutes} 分 ${seconds} 秒`;
+    }
+
+    coverScreen.addEventListener("click", enterMap);
+    clearButton.addEventListener("click", clearProgress);
+    closeGateButton.addEventListener("click", closeGate);
+    againButton.addEventListener("click", resetAdventure);
+    gateModal.addEventListener("click", (event) => {
+      if (event.target === gateModal) {
+        closeGate();
+      }
+    });
+
+    document.querySelectorAll(".hotspot").forEach((hotspot) => {
+      hotspot.addEventListener("click", () => activateHotspot(hotspot.dataset.stage));
+      hotspot.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activateHotspot(hotspot.dataset.stage);
+        }
+      });
+    });
+
+    ensureAdventureStart();
+    showCoverIfNeeded();
+    updateMapStatus();
+  </script>
+</body>
+</html>
