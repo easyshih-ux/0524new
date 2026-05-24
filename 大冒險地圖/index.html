@@ -228,6 +228,13 @@
       box-shadow: 0 28px 70px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
     }
 
+    .door.ending-mode {
+      width: min(1180px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      overflow: hidden;
+      background: #090604;
+    }
+
     .door-head {
       display: flex;
       align-items: center;
@@ -383,6 +390,109 @@
       transform: translate(-50%, -50%) scale(1.04);
     }
 
+    .ending {
+      display: none;
+      position: relative;
+      min-height: min(680px, calc(100vh - 32px));
+      cursor: pointer;
+      overflow: hidden;
+      background: #090604;
+    }
+
+    .ending.show {
+      display: block;
+    }
+
+    .ending-image {
+      display: block;
+      width: 100%;
+      height: min(664px, calc(100vh - 32px));
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1.018);
+      transition: opacity 0.7s ease, transform 1.2s ease;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .ending.show .ending-image {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .ending::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5, 3, 2, 0.32), transparent 34%),
+        linear-gradient(0deg, rgba(5, 3, 2, 0.88), rgba(5, 3, 2, 0.16) 46%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .ending-panel {
+      position: absolute;
+      left: clamp(14px, 4vw, 52px);
+      right: clamp(14px, 4vw, 52px);
+      bottom: clamp(14px, 4vw, 42px);
+      z-index: 2;
+      display: grid;
+      gap: 12px;
+      padding: clamp(14px, 2.8vw, 28px);
+      border: 1px solid rgba(242, 193, 78, 0.42);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(45, 28, 12, 0.78), rgba(12, 10, 8, 0.86)),
+        rgba(9, 6, 4, 0.78);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48), inset 0 0 0 1px rgba(255, 247, 223, 0.07);
+      backdrop-filter: blur(2px);
+    }
+
+    .ending-kicker {
+      color: var(--gold);
+      font-size: clamp(0.82rem, 1.5vw, 1rem);
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .ending-title {
+      margin: 0;
+      color: #fff4c4;
+      font-size: clamp(1.8rem, 4.6vw, 3.8rem);
+      line-height: 1.04;
+      text-shadow: 0 3px 14px rgba(0, 0, 0, 0.64);
+    }
+
+    .ending-text {
+      margin: 0;
+      max-width: 860px;
+      color: #fff7df;
+      font-size: clamp(1rem, 2.1vw, 1.45rem);
+      font-weight: 800;
+      line-height: 1.75;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .ending-action {
+      justify-self: end;
+      min-width: 112px;
+      background: linear-gradient(135deg, #92400e, #b45309);
+    }
+
+    .ending-progress {
+      position: absolute;
+      top: clamp(12px, 2.3vw, 24px);
+      right: clamp(12px, 2.3vw, 24px);
+      z-index: 2;
+      border: 1px solid rgba(242, 193, 78, 0.46);
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: #fff1be;
+      background: rgba(31, 20, 10, 0.72);
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+    }
+
     .victory {
       display: none;
       padding: 34px 18px;
@@ -398,6 +508,7 @@
       color: #fff4c4;
       font-size: clamp(2.1rem, 7vw, 4.4rem);
       line-height: 1.1;
+      text-shadow: 0 0 24px rgba(242, 193, 78, 0.42);
     }
 
     .victory p {
@@ -446,6 +557,22 @@
       .slots {
         grid-template-columns: 1fr;
       }
+
+      .ending {
+        min-height: calc(100vh - 28px);
+      }
+
+      .ending-image {
+        height: calc(100vh - 28px);
+      }
+
+      .ending-panel {
+        gap: 8px;
+      }
+
+      .ending-action {
+        justify-self: stretch;
+      }
     }
   </style>
 </head>
@@ -470,7 +597,7 @@
   </main>
 
   <section class="modal" id="gateModal" aria-modal="true" role="dialog" aria-labelledby="doorTitle">
-    <div class="door">
+    <div class="door" id="gateDoor">
       <div id="doorGame">
         <div class="door-head">
           <h2 id="doorTitle">通關大門</h2>
@@ -483,8 +610,19 @@
         </div>
       </div>
 
+      <div class="ending" id="ending" role="button" tabindex="0" aria-label="結局過場，點擊進到下一張">
+        <img class="ending-image" id="endingImage" src="結局圖1.png" alt="三印歸天結局過場圖">
+        <div class="ending-progress" id="endingProgress">1 / 4</div>
+        <div class="ending-panel">
+          <div class="ending-kicker">結局</div>
+          <h2 class="ending-title" id="endingTitle">三印歸天</h2>
+          <p class="ending-text" id="endingText"></p>
+          <button type="button" class="ending-action" id="endingNextButton">下一頁</button>
+        </div>
+      </div>
+
       <div class="victory" id="victory">
-        <h2>🏆 冒險完成！</h2>
+        <h2>冒險完成</h2>
         <p>總冒險時長：<strong id="durationText">00 分 00 秒</strong></p>
         <button type="button" class="again" id="againButton">再次冒險</button>
       </div>
@@ -520,15 +658,39 @@
     ];
 
     const COVER_KEY = "adventure_cover_seen";
+    const ENDING_SCENES = [
+      {
+        image: "結局圖1.png",
+        text: "三印落位之時，門沒有轟然洞開，只是像一段沉睡太久的名字，終於被人輕輕念起。"
+      },
+      {
+        image: "結局圖2.png",
+        text: "你以為自己在尋找通關之路，其實一路拾起的，是讓世界重新記得自己的線索。"
+      },
+      {
+        image: "結局圖3.png",
+        text: "王朝不只在年代裡，成語不只在字格裡，勇氣也不只在刀光裡。它們安靜地合在一起，成為一扇門的答案。"
+      },
+      {
+        image: "結局圖4.png",
+        text: "門會關上，路不會。於是古卷收起光芒，只留下下一次翻開時，仍會發亮的塵埃。"
+      }
+    ];
     const ADVENTURE_KEYS = ["adventure_start", ...STAGES.map((stage) => stage.key)];
     const coverScreen = document.querySelector("#coverScreen");
     const certCount = document.querySelector("#certCount");
     const clearButton = document.querySelector("#clearButton");
     const gateModal = document.querySelector("#gateModal");
+    const gateDoor = document.querySelector("#gateDoor");
     const closeGateButton = document.querySelector("#closeGateButton");
     const slots = document.querySelector("#slots");
     const bag = document.querySelector("#bag");
     const doorGame = document.querySelector("#doorGame");
+    const ending = document.querySelector("#ending");
+    const endingImage = document.querySelector("#endingImage");
+    const endingText = document.querySelector("#endingText");
+    const endingProgress = document.querySelector("#endingProgress");
+    const endingNextButton = document.querySelector("#endingNextButton");
     const victory = document.querySelector("#victory");
     const durationText = document.querySelector("#durationText");
     const againButton = document.querySelector("#againButton");
@@ -536,6 +698,8 @@
     let placed = new Set();
     let draggedBadge = null;
     let pointerDrag = null;
+    let endingIndex = 0;
+    let endingTimer = null;
 
     function ensureAdventureStart() {
       if (!localStorage.getItem("adventure_start")) {
@@ -604,7 +768,11 @@
 
     function openGate() {
       placed = new Set();
+      endingIndex = 0;
+      window.clearTimeout(endingTimer);
+      gateDoor.classList.remove("ending-mode");
       doorGame.classList.remove("hidden");
+      ending.classList.remove("show");
       victory.classList.remove("show");
       gateModal.classList.add("show");
       renderDoor();
@@ -612,6 +780,10 @@
 
     function closeGate() {
       gateModal.classList.remove("show");
+      window.clearTimeout(endingTimer);
+      gateDoor.classList.remove("ending-mode");
+      ending.classList.remove("show");
+      victory.classList.remove("show");
       cleanupPointerDrag();
     }
 
@@ -794,12 +966,53 @@
       placed.add(slot.dataset.type);
 
       if (placed.size === STAGES.length) {
-        window.setTimeout(showVictory, 350);
+        window.setTimeout(showEnding, 350);
       }
     }
 
-    function showVictory() {
+    function showEnding() {
+      endingIndex = 0;
       doorGame.classList.add("hidden");
+      gateDoor.classList.add("ending-mode");
+      ending.classList.add("show");
+      victory.classList.remove("show");
+      renderEndingScene();
+    }
+
+    function renderEndingScene() {
+      const scene = ENDING_SCENES[endingIndex];
+      const currentIndex = endingIndex;
+      window.clearTimeout(endingTimer);
+      endingImage.style.opacity = "0";
+      endingTimer = window.setTimeout(() => {
+        endingImage.src = scene.image;
+        endingImage.alt = `三印歸天結局過場圖 ${currentIndex + 1}`;
+        endingText.textContent = scene.text;
+        endingProgress.textContent = `${currentIndex + 1} / ${ENDING_SCENES.length}`;
+        endingNextButton.textContent = currentIndex === ENDING_SCENES.length - 1 ? "完成" : "下一頁";
+        endingImage.style.opacity = "";
+      }, 120);
+    }
+
+    function advanceEnding() {
+      if (!ending.classList.contains("show")) {
+        return;
+      }
+
+      if (endingIndex < ENDING_SCENES.length - 1) {
+        endingIndex += 1;
+        renderEndingScene();
+        return;
+      }
+
+      showVictory();
+    }
+
+    function showVictory() {
+      window.clearTimeout(endingTimer);
+      doorGame.classList.add("hidden");
+      ending.classList.remove("show");
+      gateDoor.classList.remove("ending-mode");
       victory.classList.add("show");
       durationText.textContent = formatDuration(Date.now() - Number(localStorage.getItem("adventure_start") || Date.now()));
     }
@@ -814,6 +1027,17 @@
     coverScreen.addEventListener("click", enterMap);
     clearButton.addEventListener("click", clearProgress);
     closeGateButton.addEventListener("click", closeGate);
+    ending.addEventListener("click", advanceEnding);
+    ending.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        advanceEnding();
+      }
+    });
+    endingNextButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      advanceEnding();
+    });
     againButton.addEventListener("click", resetAdventure);
     gateModal.addEventListener("click", (event) => {
       if (event.target === gateModal) {
