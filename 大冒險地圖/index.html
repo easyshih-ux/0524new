@@ -425,30 +425,31 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(180deg, rgba(5, 3, 2, 0.32), transparent 34%),
-        linear-gradient(0deg, rgba(5, 3, 2, 0.88), rgba(5, 3, 2, 0.16) 46%, transparent 70%);
+        linear-gradient(180deg, rgba(5, 3, 2, 0.12), transparent 26%),
+        linear-gradient(0deg, rgba(5, 3, 2, 0.34), rgba(5, 3, 2, 0.08) 22%, transparent 42%);
       pointer-events: none;
     }
 
     .ending-panel {
       position: absolute;
-      left: clamp(14px, 4vw, 52px);
-      right: clamp(14px, 4vw, 52px);
-      bottom: clamp(14px, 4vw, 42px);
+      left: 50%;
+      bottom: clamp(10px, 2.4vw, 28px);
       z-index: 2;
       display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
       gap: 12px;
-      padding: clamp(14px, 2.8vw, 28px);
-      border: 1px solid rgba(242, 193, 78, 0.42);
+      width: min(900px, calc(100% - 28px));
+      padding: clamp(10px, 1.8vw, 18px);
+      border: 1px solid rgba(242, 193, 78, 0.22);
       border-radius: 8px;
-      background:
-        linear-gradient(135deg, rgba(45, 28, 12, 0.78), rgba(12, 10, 8, 0.86)),
-        rgba(9, 6, 4, 0.78);
-      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48), inset 0 0 0 1px rgba(255, 247, 223, 0.07);
-      backdrop-filter: blur(2px);
+      background: rgba(9, 6, 4, 0.36);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 247, 223, 0.04);
+      transform: translateX(-50%);
     }
 
     .ending-kicker {
+      display: none;
       color: var(--gold);
       font-size: clamp(0.82rem, 1.5vw, 1rem);
       font-weight: 900;
@@ -456,6 +457,7 @@
     }
 
     .ending-title {
+      display: none;
       margin: 0;
       color: #fff4c4;
       font-size: clamp(1.8rem, 4.6vw, 3.8rem);
@@ -465,17 +467,18 @@
 
     .ending-text {
       margin: 0;
-      max-width: 860px;
       color: #fff7df;
-      font-size: clamp(1rem, 2.1vw, 1.45rem);
+      font-size: clamp(0.95rem, 1.7vw, 1.18rem);
       font-weight: 800;
-      line-height: 1.75;
+      line-height: 1.6;
       text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
     }
 
     .ending-action {
       justify-self: end;
-      min-width: 112px;
+      min-width: 92px;
+      min-height: 38px;
+      padding: 8px 12px;
       background: linear-gradient(135deg, #92400e, #b45309);
     }
 
@@ -568,6 +571,7 @@
 
       .ending-panel {
         gap: 8px;
+        grid-template-columns: 1fr;
       }
 
       .ending-action {
