@@ -443,9 +443,7 @@
       bottom: clamp(10px, 2.4vw, 28px);
       z-index: 2;
       display: grid;
-      grid-template-columns: 1fr auto;
       align-items: center;
-      gap: 12px;
       width: min(900px, calc(100% - 28px));
       padding: clamp(10px, 1.8vw, 18px);
       border: 1px solid rgba(242, 193, 78, 0.22);
@@ -479,14 +477,6 @@
       font-weight: 800;
       line-height: 1.6;
       text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-    }
-
-    .ending-action {
-      justify-self: end;
-      min-width: 92px;
-      min-height: 38px;
-      padding: 8px 12px;
-      background: linear-gradient(135deg, #92400e, #b45309);
     }
 
     .ending-progress {
@@ -623,11 +613,6 @@
 
       .ending-panel {
         gap: 8px;
-        grid-template-columns: 1fr;
-      }
-
-      .ending-action {
-        justify-self: stretch;
       }
     }
   </style>
@@ -673,7 +658,6 @@
           <div class="ending-kicker">結局</div>
           <h2 class="ending-title" id="endingTitle">三印歸天</h2>
           <p class="ending-text" id="endingText"></p>
-          <button type="button" class="ending-action" id="endingNextButton">下一頁</button>
         </div>
       </div>
 
@@ -749,7 +733,6 @@
     const endingImage = document.querySelector("#endingImage");
     const endingText = document.querySelector("#endingText");
     const endingProgress = document.querySelector("#endingProgress");
-    const endingNextButton = document.querySelector("#endingNextButton");
     const victory = document.querySelector("#victory");
     const durationText = document.querySelector("#durationText");
     const againButton = document.querySelector("#againButton");
@@ -1051,7 +1034,6 @@
         endingImage.alt = `三印歸天結局過場圖 ${currentIndex + 1}`;
         endingText.textContent = scene.text;
         endingProgress.textContent = `${currentIndex + 1} / ${ENDING_SCENES.length}`;
-        endingNextButton.textContent = currentIndex === ENDING_SCENES.length - 1 ? "完成" : "下一頁";
         endingImage.style.opacity = "";
       }, 120);
     }
@@ -1096,10 +1078,6 @@
         event.preventDefault();
         advanceEnding();
       }
-    });
-    endingNextButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      advanceEnding();
     });
     againButton.addEventListener("click", resetAdventure);
     gateModal.addEventListener("click", (event) => {
