@@ -235,6 +235,13 @@
       background: #090604;
     }
 
+    .door.victory-mode {
+      width: min(1180px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      overflow: hidden;
+      background: #090604;
+    }
+
     .door-head {
       display: flex;
       align-items: center;
@@ -498,12 +505,48 @@
 
     .victory {
       display: none;
-      padding: 34px 18px;
+      position: relative;
+      min-height: min(680px, calc(100vh - 32px));
       text-align: center;
+      overflow: hidden;
+      background: #090604;
     }
 
     .victory.show {
       display: block;
+    }
+
+    .victory-image {
+      display: block;
+      width: 100%;
+      height: min(664px, calc(100vh - 32px));
+      object-fit: cover;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .victory::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5, 3, 2, 0.08), transparent 32%),
+        linear-gradient(0deg, rgba(5, 3, 2, 0.42), rgba(5, 3, 2, 0.06) 34%, transparent 58%);
+      pointer-events: none;
+    }
+
+    .victory-card {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(12px, 3vw, 34px);
+      z-index: 2;
+      width: min(620px, calc(100% - 28px));
+      padding: clamp(16px, 2.4vw, 26px);
+      border: 1px solid rgba(242, 193, 78, 0.28);
+      border-radius: 8px;
+      background: rgba(9, 6, 4, 0.45);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34), inset 0 0 0 1px rgba(255, 247, 223, 0.05);
+      transform: translateX(-50%);
     }
 
     .victory h2 {
@@ -516,9 +559,10 @@
 
     .victory p {
       margin: 0 0 22px;
-      color: var(--muted);
+      color: #fff1be;
       font-size: 1.25rem;
       font-weight: 900;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.66);
     }
 
     .again {
@@ -565,7 +609,15 @@
         min-height: calc(100vh - 28px);
       }
 
+      .victory {
+        min-height: calc(100vh - 28px);
+      }
+
       .ending-image {
+        height: calc(100vh - 28px);
+      }
+
+      .victory-image {
         height: calc(100vh - 28px);
       }
 
@@ -626,9 +678,12 @@
       </div>
 
       <div class="victory" id="victory">
-        <h2>冒險完成</h2>
-        <p>總冒險時長：<strong id="durationText">00 分 00 秒</strong></p>
-        <button type="button" class="again" id="againButton">再次冒險</button>
+        <img class="victory-image" src="結局圖4.png" alt="冒險完成畫面">
+        <div class="victory-card">
+          <h2>冒險完成</h2>
+          <p>總冒險時長：<strong id="durationText">00 分 00 秒</strong></p>
+          <button type="button" class="again" id="againButton">再次冒險</button>
+        </div>
       </div>
     </div>
   </section>
@@ -775,6 +830,7 @@
       endingIndex = 0;
       window.clearTimeout(endingTimer);
       gateDoor.classList.remove("ending-mode");
+      gateDoor.classList.remove("victory-mode");
       doorGame.classList.remove("hidden");
       ending.classList.remove("show");
       victory.classList.remove("show");
@@ -786,6 +842,7 @@
       gateModal.classList.remove("show");
       window.clearTimeout(endingTimer);
       gateDoor.classList.remove("ending-mode");
+      gateDoor.classList.remove("victory-mode");
       ending.classList.remove("show");
       victory.classList.remove("show");
       cleanupPointerDrag();
@@ -978,6 +1035,7 @@
       endingIndex = 0;
       doorGame.classList.add("hidden");
       gateDoor.classList.add("ending-mode");
+      gateDoor.classList.remove("victory-mode");
       ending.classList.add("show");
       victory.classList.remove("show");
       renderEndingScene();
@@ -1017,6 +1075,7 @@
       doorGame.classList.add("hidden");
       ending.classList.remove("show");
       gateDoor.classList.remove("ending-mode");
+      gateDoor.classList.add("victory-mode");
       victory.classList.add("show");
       durationText.textContent = formatDuration(Date.now() - Number(localStorage.getItem("adventure_start") || Date.now()));
     }
